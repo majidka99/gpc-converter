@@ -2,6 +2,10 @@
 
 Modern desktop application for converting Viva Wallet export files to GPC (ABO) format compatible with **POHODA** accounting software.
 
+[![GitHub release](https://img.shields.io/github/v/release/majidka99/gpc-converter?style=flat-square)](https://github.com/majidka99/gpc-converter/releases)
+[![GitHub license](https://img.shields.io/github/license/majidka99/gpc-converter?style=flat-square)](LICENSE)
+[![GitHub Actions](https://img.shields.io/github/actions/workflow/status/majidka99/gpc-converter/build-windows.yml?style=flat-square)](https://github.com/majidka99/gpc-converter/actions)
+
 ## 🎯 Purpose
 
 Viva Wallet provides transaction exports in an HTML/XLS format. POHODA accounting software requires bank statements in the Czech **GPC (ABO)** standard. This tool bridges that gap — taking your Viva Wallet export and producing a POHODA-ready `.gpc` file that imports cleanly.
@@ -188,7 +192,7 @@ Adapt the conversion to other banks by modifying:
 
 ## 📜 License
 
-This tool is provided as‑is for personal and business use with Viva Wallet exports.
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
 
 ## 🙋 Support
 
