@@ -52,10 +52,15 @@ The interface consists of:
 **Permanent download link:**
 👉 [**Download GPC Converter from GitHub Releases**](https://github.com/majidka99/gpc-converter/releases/latest)
 
-- Single-click `.msi` installer for Windows
-- No Python installation required
+- Single-file portable `.exe` — no installation required
+- Just download, double-click, and run
 - Includes both GUI and CLI tools
 - Auto-updates notification (via GitHub release)
+
+**How to use:**
+1. Download `GPC_Converter_Windows.zip`
+2. Extract the ZIP file
+3. Double-click `GPC Converter.exe` to launch the application
 
 ### 🐍 Run from Source (Any OS)
 
