@@ -29,11 +29,11 @@ jobs:
 
       - name: Build executable
         run: |
-          pyinstaller gpc_converter_gui.spec --clean --noconfirm
+          pyinstaller gpc_converter_gui.spec --clean --noconfirm --onefile
 
-      - name: Create ZIP archive
+      - name: Create release artifact
         run: |
-          Compress-Archive -Path "dist\GPC Converter\*" -DestinationPath "GPC_Converter_Windows.zip"
+          Compress-Archive -Path "dist\GPC Converter.exe" -DestinationPath "GPC_Converter_Windows.zip"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4

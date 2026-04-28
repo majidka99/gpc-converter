@@ -1,8 +1,8 @@
 @echo off
-REM Build script for GPC Converter Windows executable
+REM Build script for GPC Converter Windows executable (single-file portable)
 REM Requires: pip install pyinstaller
 
-echo === Building GPC Converter ===
+echo === Building GPC Converter (Single-File Portable) ===
 
 REM Check if PyInstaller is installed
 pyinstaller --version >nul 2>&1
@@ -16,10 +16,10 @@ if errorlevel 1 (
 REM Clean previous builds
 if exist "build" rmdir /s /q build
 if exist "dist" rmdir /s /q dist
-if exist "GPC Converter" rmdir /s /q "GPC Converter"
+if exist "GPC Converter.exe" del /f /q "GPC Converter.exe" 2>nul
 
-echo [1/2] Building executable with PyInstaller...
-pyinstaller gpc_converter_gui.spec --clean
+echo [1/2] Building single-file executable with PyInstaller...
+pyinstaller gpc_converter_gui.spec --clean --noconfirm --onefile
 
 if errorlevel 1 (
     echo.
@@ -29,18 +29,29 @@ if errorlevel 1 (
 )
 
 echo.
-echo [2/2] Creating installer...
+echo [2/2] Creating ZIP archive...
 
-REM Copy additional files to dist folder
-copy README.md "dist\GPC Converter\" >nul 2>&1
-copy convert_to_gpc.py "dist\GPC Converter\" >nul 2>&1
+REM Ensure dist folder exists
+if not exist "dist" mkdir dist
+
+REM Copy the single exe to a temp folder for zipping
+mkdir "temp_zip" 2>nul
+copy "dist\GPC Converter.exe" "temp_zip\" >nul
+
+REM Create ZIP with just the exe
+powershell -Command "Compress-Archive -Path 'temp_zip\*' -DestinationPath 'GPC_Converter_Windows.zip' -Force"
+
+REM Cleanup temp folder
+rmdir /s /q temp_zip
 
 echo.
 echo ========================================
-echo Build complete! Executable is in:
-echo   dist\GPC Converter\GPC Converter.exe
+echo Build complete! Portable executable:
+echo   dist\GPC Converter.exe
+echo Archive: GPC_Converter_Windows.zip
 echo ========================================
 echo.
-echo Optional: Use Inno Setup or NSIS to create an .msi installer.
+echo Optional: Use Inno Setup to create an .msi installer:
+echo   gpc_converter.iss
 echo.
 pause
