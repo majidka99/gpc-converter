@@ -1,0 +1,5 @@
+# This app uses only Python standard library.
+# No external dependencies required.
+
+# Optional: pyinstaller for building standalone executable
+# pyinstaller >= 5.0
