@@ -41,18 +41,59 @@ The interface consists of:
 6. **Convert button** — Triggers conversion and displays results
 7. **Conversion log** — Scrollable area showing totals, dates, and balance check
 
-## 🔧 Installation
+## 📦 Installation
 
-### Requirements
-- Python 3.8+
-- Standard library only (no external dependencies)
+### Option A — Download Pre-built Executable (Windows)
 
-### Run
+1. Go to the [Releases page](https://github.com/majidka99/gpc-converter/releases)
+2. Download `GPC_Converter_Setup_1.0.0.msi` (Windows installer)
+3. Run the installer and follow prompts
+4. Launch **GPC Converter** from Start Menu or Desktop
+
+### Option B — Run from Source (Any OS)
+
+#### Requirements
+- Python 3.8 or higher
+- Standard library only (no external packages needed)
+
+#### Steps
 ```bash
+# Clone the repository
+git clone https://github.com/majidka99/gpc-converter.git
+cd gpc-converter
+
+# Run the GUI application
 python3 gpc_converter_gui.py
+
+# Or run the CLI version (edit INPUT_FILE/OUTPUT_FILE in script first)
+python3 convert_to_gpc.py
 ```
 
-The script is self-contained — no virtual environment or pip install needed.
+**Note on Windows:** If Python is not installed, download it from [python.org](https://python.org) and during installation check **"Add Python to PATH"**. Tkinter is included by default with Windows Python installs.
+
+### Option C — Build Standalone Executable from Source
+
+To create a standalone `.exe` (no Python required to run):
+
+#### Prerequisites
+```bash
+pip install pyinstaller
+```
+
+#### Build (Windows)
+```bash
+# From repository root
+build.bat
+```
+
+The executable will be at `dist\GPC Converter\GPC Converter.exe`.
+
+#### Build (Linux/macOS)
+```bash
+pyinstaller gpc_converter_gui.spec --clean
+```
+
+**Note:** The Windows `.exe` must be built on Windows (or via Wine) for best compatibility. Cross-compilation from Linux is not officially supported by PyInstaller.
 
 ## 📖 Usage Guide
 
