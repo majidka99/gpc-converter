@@ -2,9 +2,9 @@
 
 Modern desktop application for converting Viva Wallet export files to GPC (ABO) format compatible with **POHODA** accounting software.
 
-[![GitHub release](https://img.shields.io/github/v/release/majidka99/gpc-converter?style=flat-square)](https://github.com/majidka99/gpc-converter/releases)
-[![GitHub license](https://img.shields.io/github/license/majidka99/gpc-converter?style=flat-square)](LICENSE)
-[![GitHub Actions](https://img.shields.io/github/actions/workflow/status/majidka99/gpc-converter/build-windows.yml?style=flat-square)](https://github.com/majidka99/gpc-converter/actions)
+[![GitHub release](https://img.shields.io/github/v/release/majidka99/gpc-converter?style=for-the-badge&color=blue&label=Download%20Latest)](https://github.com/majidka99/gpc-converter/releases/latest)
+[![GitHub license](https://img.shields.io/github/license/majidka99/gpc-converter?style=for-the-badge)](LICENSE)
+[![GitHub Actions](https://img.shields.io/github/actions/workflow/status/majidka99/gpc-converter/build-windows.yml?style=for-the-badge)](https://github.com/majidka99/gpc-converter/actions)
 
 ## 🎯 Purpose
 
@@ -47,14 +47,17 @@ The interface consists of:
 
 ## 📦 Installation
 
-### Option A — Download Pre-built Executable (Windows)
+### ✅ **Download Windows Executable (Recommended)**
 
-1. Go to the [Releases page](https://github.com/majidka99/gpc-converter/releases)
-2. Download `GPC_Converter_Setup_1.0.0.msi` (Windows installer)
-3. Run the installer and follow prompts
-4. Launch **GPC Converter** from Start Menu or Desktop
+**Permanent download link:**
+👉 [**Download GPC Converter from GitHub Releases**](https://github.com/majidka99/gpc-converter/releases/latest)
 
-### Option B — Run from Source (Any OS)
+- Single-click `.msi` installer for Windows
+- No Python installation required
+- Includes both GUI and CLI tools
+- Auto-updates notification (via GitHub release)
+
+### 🐍 Run from Source (Any OS)
 
 #### Requirements
 - Python 3.8 or higher
