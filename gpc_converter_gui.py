@@ -11,6 +11,33 @@ import html as html_module
 import sys
 import os
 
+
+def normalize_account_number(account: str) -> str:
+    """Validate and pad an account number to the 16-char GPC field."""
+    cleaned = account.strip()
+    if not cleaned.isdigit():
+        raise ValueError("Account number must contain digits only.")
+    if len(cleaned) > 16:
+        raise ValueError("Account number must be 16 digits or fewer.")
+    return cleaned.rjust(16, "0")
+
+
+def enable_high_dpi_support() -> None:
+    """Enable DPI awareness on Windows so Tk scales correctly."""
+    if sys.platform != "win32":
+        return
+
+    try:
+        import ctypes
+
+        awareness_context = ctypes.c_void_p(-4)
+        ctypes.windll.user32.SetProcessDpiAwarenessContext(awareness_context)
+    except Exception:
+        try:
+            ctypes.windll.shcore.SetProcessDpiAwareness(1)
+        except Exception:
+            pass
+
 # ── Core conversion functions ────────────────────────────────────────────────────
 
 class TableParser(HTMLParser):
@@ -79,6 +106,7 @@ def fmt_amount_12(haléře: int) -> str:
 def make_074(account, start_date, end_date, old_bal, new_bal,
              debit_sum, credit_sum, seq, name) -> str:
     """Build a 074 header record (exactly 128 chars)."""
+    account_field = normalize_account_number(account)
     old_sign  = "+" if old_bal  >= 0 else "-"
     new_sign  = "+" if new_bal  >= 0 else "-"
     dbt_sign  = "-" if debit_sum > 0 else "0"
@@ -86,7 +114,7 @@ def make_074(account, start_date, end_date, old_bal, new_bal,
 
     rec = (
         "074"
-        + account.rjust(16, "0")
+        + account_field
         + name[:20].ljust(20)
         + fmt_date(start_date)
         + fmt_amount(old_bal)
@@ -107,12 +135,13 @@ def make_074(account, start_date, end_date, old_bal, new_bal,
 
 def make_075(account, date_str, amount_hel, desc) -> str:
     """Build a 075 transaction record (exactly 128 chars)."""
+    account_field = normalize_account_number(account)
     tx_type = "2" if amount_hel >= 0 else "1"
     note    = desc[:20].ljust(20)
 
     rec = (
         "075"
-        + account.rjust(16, "0")
+        + account_field
         + "0" * 16
         + "0" * 13
         + fmt_amount_12(amount_hel)
@@ -132,6 +161,8 @@ def make_075(account, date_str, amount_hel, desc) -> str:
 
 def convert_file(input_path, output_path, account_number, account_name, statement_seq):
     """Perform the conversion and return a summary dict."""
+    normalized_account = normalize_account_number(account_number)
+
     with open(input_path, encoding="utf-8") as f:
         content = f.read()
 
@@ -162,7 +193,7 @@ def convert_file(input_path, output_path, account_number, account_name, statemen
 
     lines = []
     lines.append(make_074(
-        account    = account_number,
+        account    = normalized_account,
         start_date = start_date,
         end_date   = end_date,
         old_bal    = opening_balance,
@@ -175,7 +206,7 @@ def convert_file(input_path, output_path, account_number, account_name, statemen
 
     for row in data_rows_chrono:
         lines.append(make_075(
-            account    = account_number,
+            account    = normalized_account,
             date_str   = row[3],
             amount_hel = parse_amount(row[7]),
             desc       = row[4],
@@ -225,7 +256,7 @@ TRANSLATIONS = {
         "input_btn": "Browse",
         "output_label": "💾 Output File",
         "output_btn": "Browse",
-        "account_label": "🏦 Account Number (16 digits)",
+        "account_label": "🏦 Account Number (up to 16 digits)",
         "name_label": "🏢 Account Name (max 20 chars)",
         "seq_label": "🔢 Statement #",
         "convert_btn": "Convert to GPC",
@@ -234,7 +265,7 @@ TRANSLATIONS = {
         "output_msg": "📁 Output    : {}",
         "error_file": "Please select a valid input file.",
         "error_output": "Please specify an output file.",
-        "error_acc_num": "Account number must be exactly 16 digits.",
+        "error_acc_num": "Account number must contain only digits and be at most 16 digits long.",
         "error_acc_name": "Account name is required (max 20 chars).",
         "error_seq": "Statement sequence must be a number.",
         "conversion_error": "Conversion Error",
@@ -260,7 +291,7 @@ TRANSLATIONS = {
         "input_btn": "Procházet",
         "output_label": "💾 Výstupní soubor",
         "output_btn": "Procházet",
-        "account_label": "🏦 Číslo účtu (16 číslic)",
+        "account_label": "🏦 Číslo účtu (max. 16 číslic)",
         "name_label": "🏢 Název účtu (max 20 znaků)",
         "seq_label": "�Číslo výpisu",
         "convert_btn": "Převést do GPC",
@@ -269,7 +300,7 @@ TRANSLATIONS = {
         "output_msg": "📁 Výstup    : {}",
         "error_file": "Vyberte platný vstupní soubor.",
         "error_output": "Zadejte výstupní soubor.",
-        "error_acc_num": "Číslo účtu musí mít přesně 16 číslic.",
+        "error_acc_num": "Číslo účtu musí obsahovat pouze číslice a mít nejvýše 16 číslic.",
         "error_acc_name": "Název účtu je povinný (max 20 znaků).",
         "error_seq": "Číslo výpisu musí být číslo.",
         "conversion_error": "Chyba převodu",
@@ -299,8 +330,12 @@ class GPCConverterGUI(tk.Tk):
 
         self.title(self.t["title"])
         self.configure(bg=ModernStyle.BG)
-        self.resizable(False, False)
-        self.minsize(580, 540)
+        self.resizable(True, True)
+        self.minsize(760, 620)
+        self.geometry("900x720")
+
+        if sys.platform == "win32":
+            self.call("tk", "scaling", self.winfo_fpixels("1i") / 72.0)
 
         # Variables
         self.input_file     = tk.StringVar()
@@ -339,7 +374,7 @@ class GPCConverterGUI(tk.Tk):
         style.configure("Lang.TFrame", background=ModernStyle.BG)
 
         # Label styles
-        style.configure("Heading.TLabel", 
+        style.configure("Heading.TLabel",
                        background=ModernStyle.BG,
                        foreground=ModernStyle.TEXT,
                        font=(ModernStyle.FONT_FAMILY, 16, "bold"))
@@ -397,6 +432,8 @@ class GPCConverterGUI(tk.Tk):
         main.grid(row=0, column=0, sticky="nsew")
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
+        main.columnconfigure(0, weight=1)
+        main.columnconfigure(1, weight=1)
 
         # Top bar with language toggle
         self._build_top_bar(main)
@@ -410,6 +447,7 @@ class GPCConverterGUI(tk.Tk):
         # Card container
         card = ttk.Frame(main, style="Card.TFrame", relief="flat")
         card.grid(row=3, column=0, columnspan=2, sticky="nsew", padx=20, pady=10)
+        main.rowconfigure(3, weight=0)
 
         self._build_card_fields(card)
 
@@ -438,6 +476,7 @@ class GPCConverterGUI(tk.Tk):
         """Build the input fields inside a card-like container."""
         pad = {"padx": 20, "pady": 15}
         label_pad = {"padx": 20, "pady": (15, 5)}
+        parent.columnconfigure(1, weight=1)
 
         row = 0
 
@@ -446,11 +485,11 @@ class GPCConverterGUI(tk.Tk):
             row=row, column=0, sticky="w", **label_pad)
         input_frame = ttk.Frame(parent, style="Card.TFrame")
         input_frame.grid(row=row, column=1, sticky="we", **pad)
-        ttk.Entry(input_frame, textvariable=self.input_file, width=45,
-                 style="Modern.TEntry").pack(side="left")
+        input_frame.columnconfigure(0, weight=1)
+        ttk.Entry(input_frame, textvariable=self.input_file,
+                 style="Modern.TEntry").grid(row=0, column=0, sticky="ew")
         ttk.Button(input_frame, text=self.tr("input_btn"), style="Secondary.TButton",
-                  command=self._browse_input).pack(side="left", padx=5)
-        parent.columnconfigure(1, weight=1)
+                  command=self._browse_input).grid(row=0, column=1, padx=(8, 0))
 
         row += 1
 
@@ -459,26 +498,27 @@ class GPCConverterGUI(tk.Tk):
             row=row, column=0, sticky="w", **label_pad)
         output_frame = ttk.Frame(parent, style="Card.TFrame")
         output_frame.grid(row=row, column=1, sticky="we", **pad)
-        ttk.Entry(output_frame, textvariable=self.output_file, width=45,
-                 style="Modern.TEntry").pack(side="left")
+        output_frame.columnconfigure(0, weight=1)
+        ttk.Entry(output_frame, textvariable=self.output_file,
+                 style="Modern.TEntry").grid(row=0, column=0, sticky="ew")
         ttk.Button(output_frame, text=self.tr("output_btn"), style="Secondary.TButton",
-                  command=self._browse_output).pack(side="left", padx=5)
+                  command=self._browse_output).grid(row=0, column=1, padx=(8, 0))
 
         row += 1
 
         # Account number
         ttk.Label(parent, text=self.tr("account_label"), style="FieldLabel.TLabel").grid(
             row=row, column=0, sticky="w", **label_pad)
-        ttk.Entry(parent, textvariable=self.account_number, width=30,
-                 style="Modern.TEntry").grid(row=row, column=1, sticky="w", **pad)
+        ttk.Entry(parent, textvariable=self.account_number,
+                 style="Modern.TEntry").grid(row=row, column=1, sticky="ew", **pad)
 
         row += 1
 
         # Account name
         ttk.Label(parent, text=self.tr("name_label"), style="FieldLabel.TLabel").grid(
             row=row, column=0, sticky="w", **label_pad)
-        ttk.Entry(parent, textvariable=self.account_name, width=30,
-                 style="Modern.TEntry").grid(row=row, column=1, sticky="w", **pad)
+        ttk.Entry(parent, textvariable=self.account_name,
+                 style="Modern.TEntry").grid(row=row, column=1, sticky="ew", **pad)
 
         row += 1
 
@@ -498,7 +538,7 @@ class GPCConverterGUI(tk.Tk):
         parent.rowconfigure(7, weight=1)
 
         self.log = scrolledtext.ScrolledText(
-            frame, width=60, height=12, wrap="word",
+            frame, height=12, wrap="word",
             borderwidth=0, highlightthickness=0,
             bg="white", fg=ModernStyle.TEXT,
             font=(ModernStyle.FONT_FAMILY, ModernStyle.FONT_SIZE),
@@ -572,7 +612,9 @@ class GPCConverterGUI(tk.Tk):
         if not output_path:
             messagebox.showerror(self.t["conversion_error"], self.t["error_output"])
             return
-        if len(acc_num) != 16 or not acc_num.isdigit():
+        try:
+            normalize_account_number(acc_num)
+        except ValueError:
             messagebox.showerror(self.t["conversion_error"], self.t["error_acc_num"])
             return
         if not acc_name:
@@ -628,6 +670,7 @@ class GPCConverterGUI(tk.Tk):
 
 
 def main():
+    enable_high_dpi_support()
     app = GPCConverterGUI()
     app.mainloop()
 

@@ -60,6 +60,16 @@ STATEMENT_SEQ  = 1
 # ───────────────────────────────────────────────────────────────────────────────
 
 
+def normalize_account_number(account: str) -> str:
+    """Validate and pad an account number to the 16-char GPC field."""
+    cleaned = account.strip()
+    if not cleaned.isdigit():
+        raise ValueError("Account number must contain digits only.")
+    if len(cleaned) > 16:
+        raise ValueError("Account number must be 16 digits or fewer.")
+    return cleaned.rjust(16, "0")
+
+
 class TableParser(HTMLParser):
     def __init__(self):
         super().__init__()
@@ -145,6 +155,7 @@ def make_074(account, start_date, end_date, old_bal, new_bal,
       109-114 accounting / closing date DDMMYY
       115-128 filler (14 spaces)
     """
+    account_field = normalize_account_number(account)
     old_sign  = "+" if old_bal  >= 0 else "-"
     new_sign  = "+" if new_bal  >= 0 else "-"
     dbt_sign  = "-" if debit_sum > 0 else "0"
@@ -152,7 +163,7 @@ def make_074(account, start_date, end_date, old_bal, new_bal,
 
     rec = (
         "074"                            # [1-3]   (3)
-        + account.rjust(16, "0")         # [4-19]  (16)
+        + account_field                   # [4-19]  (16)
         + name[:20].ljust(20)            # [20-39] (20)
         + fmt_date(start_date)           # [40-45] (6)
         + fmt_amount(old_bal)            # [46-59] (14)
@@ -190,12 +201,13 @@ def make_075(account, date_str, amount_hel, desc) -> str:
       119-122 "0203" (CZK)
       123-128 maturity date DDMMYY
     """
+    account_field = normalize_account_number(account)
     tx_type = "2" if amount_hel >= 0 else "1"
     note    = desc[:20].ljust(20)
 
     rec = (
         "075"                            # [1-3]   (3)
-        + account.rjust(16, "0")         # [4-19]  (16)
+        + account_field                   # [4-19]  (16)
         + "0" * 16                       # [20-35] counter account (16)
         + "0" * 13                       # [36-48] doc number (13)
         + fmt_amount_12(amount_hel)      # [49-60] amount (12)
@@ -214,6 +226,8 @@ def make_075(account, date_str, amount_hel, desc) -> str:
 
 
 def main():
+    normalized_account = normalize_account_number(ACCOUNT_NUMBER)
+
     # ── Parse HTML/XLS file ────────────────────────────────────────────────────
     with open(INPUT_FILE, encoding="utf-8") as f:
         content = f.read()
@@ -271,7 +285,7 @@ def main():
 
     # 074 – header
     lines.append(make_074(
-        account    = ACCOUNT_NUMBER,
+        account    = normalized_account,
         start_date = start_date,
         end_date   = end_date,
         old_bal    = opening_balance,
@@ -285,7 +299,7 @@ def main():
     # 075 – transactions in chronological order (oldest first)
     for row in data_rows_chrono:
         lines.append(make_075(
-            account    = ACCOUNT_NUMBER,
+            account    = normalized_account,
             date_str   = row[3],          # Datum transakce
             amount_hel = parse_amount(row[7]),
             desc       = row[4],          # Popis
